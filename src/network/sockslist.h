@@ -25,7 +25,7 @@ int sockslist_init(int initialCapacity);
 void sockslist_free(void);
 
 /**
- * int addSocket(struct sockaddr*, int)
+ * int sockslist_add(struct sockaddr*, int)
  * Adds a new socket to the sockslist, does not try to connect.
  * @param socketfd: Socket File Descriptor.
  * @param socketInfo: Socket information generated from getaddrinfo() or accept()
@@ -61,5 +61,11 @@ struct sockaddr* sockslist_getinfo(int id);
  * @return: id on failure, negative on success
  **/
 int sockslist_remove(int id);
+
+/**
+ * char sockslist_isConnected(int)
+ * @return Whether record is a connected socket or not.
+ **/
+char sockslist_isConnected(int id);
 
 #endif

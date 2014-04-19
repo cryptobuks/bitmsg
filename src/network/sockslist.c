@@ -78,7 +78,7 @@ void sockslist_free(void) {
     freeNode = records[i];
     
     if(freeNode->infoList) freeaddrinfo(freeNode->infoList);
-    else free(freeNode->sockinfo);
+    if(freeNode->sockinfo) free(freeNode->sockinfo);
     
     if(freeNode->isConnected) close(freeNode->socketfd);
     free(freeNode);
@@ -95,17 +95,34 @@ void sockslist_free(void) {
  **/
 int sockslist_add(struct sockaddr* socketinfo, int socketfd) {
   SocketRecord* newRecord;
+  struct sockaddr* def_cpy;
   assert(socketinfo != NULL);
 
   newRecord = malloc(sizeof(SocketRecord));
+  newRecord->socketfd = socketfd;
+  newRecord->infoList = NULL;
+  newRecord->isConnected = TRUE;
 
   if(newRecord == NULL) {
     perror("sockslist_add: malloc");
     return -1;
   }
 
+  def_cpy = (struct sockaddr*)malloc(sizeof(struct sockaddr));
+  if(def_cpy == NULL) {
+    perror("sockslist_add: malloc");
+    free(newRecord);
+    return -1;
+  }
+
+  memcpy(def_cpy, socketinfo, sizeof(struct sockaddr));
+  newRecord->sockinfo = def_cpy;
+
   if(size >= capacity) {
-    if(sockslist_grow()) return -1;
+    if(sockslist_grow()) {
+      free(newRecord);
+      return -1;
+    }
   }
 
   records[size] = newRecord;
@@ -200,4 +217,10 @@ int sockslist_remove(int id) {
   close(records[id]->socketfd);
   records[id]->isConnected = FALSE;
   return id;
+}
+
+char sockslist_isConnected(int id) {
+  if (id >= size) return -1;
+
+  return records[id]->isConnected;
 }
